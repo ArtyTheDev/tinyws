@@ -6,7 +6,7 @@ An example usage of it.
 ```py
 import tinyws
 
-@tinyws.app
+@tinyws.app()
 async def application(request: tinyws.WebsocketRequest):
     # You should always accept the request
     # or close it if you rejecting the request.
