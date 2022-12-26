@@ -120,7 +120,7 @@ class WebsocketRequest(BaseRequest):
         """Receive message from the client."""
 
         if self.client_state is State.DISCONNECT:
-            raise ConnectionClosed(f"Connection disconnected.")
+            raise ConnectionClosed(f"Connection has been disconnected.")
 
         message = await self.receive()
 
@@ -129,7 +129,7 @@ class WebsocketRequest(BaseRequest):
                 message.get('bytes') or None
         elif message.get('type') == 'websocket.disconnect':
             self.client_state = State.DISCONNECT
-            raise ConnectionClosed(f"Connection cut code: {message.get('code')}")
+            raise ConnectionClosed(f"Connection has been disconnected", code=int(message.get('code')))
 
     async def recv_iter(self):
         """Receive message as an iter."""
@@ -145,3 +145,4 @@ class WebsocketRequest(BaseRequest):
 
         await self.send({"type": "websocket.disconnect", "code": code})
         self.client_state = State.DISCONNECT
+        raise ConnectionClosed("Connection has been closed.")

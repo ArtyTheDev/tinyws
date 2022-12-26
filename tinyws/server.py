@@ -7,6 +7,7 @@ from tinyws.interface import WebsocketInterface, \
     LifespanInterface
 from tinyws.asgi_types import Scope, Receive, Send
 from tinyws.request import WebsocketRequest
+from tinyws.middleware import BaseMiddleware
 
 class Server(object):
     """The base class server."""
@@ -46,6 +47,11 @@ class Server(object):
 
         self.on_shutdown_func = func
 
+    def middleware(self, md: BaseMiddleware, **init):
+        """Register a middleware."""
+
+        self.asgi_app = md(self.asgi_app, **init)
+
     async def asgi_app(self, scope: Scope, receive: Receive, send: Send):
         """The main app."""
         
@@ -67,7 +73,7 @@ def app(
     logger: typing.Optional[logging.Logger] = None,
     on_startup: typing.Optional[typing.Callable] = None,
     on_shutdown: typing.Optional[typing.Callable]  = None
-) -> Server:
+):
     """To create an app."""
 
     def __deco__(function: typing.Callable) -> Server:

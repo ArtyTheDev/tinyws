@@ -22,6 +22,9 @@ class LifespanInterface:
             if process == 'startup' \
                 else self.main.on_shutdown_func
 
+        if handler is None:
+            return {"type": f"lifespan.{process}.complete"} 
+
         try:
             h = handler()
             if asyncio.iscoroutine(h):
