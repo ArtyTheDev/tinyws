@@ -54,21 +54,23 @@ class Server(object):
 
     async def asgi_app(self, scope: Scope, receive: Receive, send: Send):
         """The main app."""
-        
+
         scope_type = scope['type']
 
+        asgi_handler = None
         if scope_type == 'lifespan':
             asgi_handler = self.lifespan_class(self)
         if scope_type == 'websocket':
             asgi_handler = self.websockets_class(self)
-        
-        await asgi_handler(scope, receive, send)
+
+        if asgi_handler is not None:
+            await asgi_handler(scope, receive, send)
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
         """The main function for the asgi server to call."""
-        
+
         await self.asgi_app(scope, receive, send)
-        
+
 def app(
     logger: typing.Optional[logging.Logger] = None,
     on_startup: typing.Optional[typing.Callable] = None,
@@ -77,7 +79,7 @@ def app(
     """To create an app."""
 
     def __deco__(function: typing.Callable) -> Server:
-        return Server(function, logger=logger, 
+        return Server(function, logger=logger,
             on_startup=on_startup, on_shutdown=on_shutdown)
 
     return __deco__

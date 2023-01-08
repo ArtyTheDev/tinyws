@@ -104,7 +104,7 @@ class WebsocketRequest(BaseRequest):
         """Send a packet to the client."""
 
         message = None
-        
+
         if isinstance(packet, str):
             message = {"type": "websocket.send", "bytes": packet}
         elif isinstance(packet, bytes):
@@ -112,7 +112,7 @@ class WebsocketRequest(BaseRequest):
 
         if self.client_state is State.DISCONNECT:
             raise ConnectionClosed("Connection is not established yet.")
-            
+
         if self.application_state is State.CONNECTED:
             await self.send(message)
 
