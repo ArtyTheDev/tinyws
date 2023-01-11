@@ -1,7 +1,7 @@
 # Tinyws 📡
 a tiny tiny tiny lib to build websocket server using the ASGI server protocol.
 
-### Server Usage
+### Server Usage.
 An example usage of it.
 ```py
 import tinyws
@@ -26,7 +26,7 @@ async def application(request: tinyws.Request):
             break
 ```
 
-# Client usage.
+### Client usage.
 ```py
 import tinyws
 import asyncio
