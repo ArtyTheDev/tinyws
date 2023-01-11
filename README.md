@@ -1,6 +1,10 @@
 # Tinyws 📡
 a tiny tiny tiny lib to build websocket server using the ASGI server protocol.
-
+<br><br>
+## ⚠️ Warning
+This is not yet a complete project, the `1.0` is long way from release
+so please don't use it just learn from my mistakes and my experience.
+<br><br>
 ### Server Usage.
 An example usage of it.
 ```py
