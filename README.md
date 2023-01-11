@@ -1,39 +1,64 @@
 # Tinyws 📡
 a tiny tiny tiny lib to build websocket server using the ASGI server protocol.
 
-### Usage
+### Server Usage
 An example usage of it.
 ```py
 import tinyws
 
 @tinyws.app()
-async def application(request: tinyws.WebsocketRequest):
+async def application(request: tinyws.Request):
     # You should always accept the request
     # or close it if you rejecting the request.
     await request.accept()
 
     # To send a packet you can use eaither the raw
-    # await request.send(...) or our function await request.send_packet(...)
+    # await request.send(...)
+    await request.send("Hello!")
 
     while True:
         try:
             # await request.recv() raise an error
             # ConnectionClosed when the connection is closed
             # it also raise it when you close the connection.
-            print(await request.recv())
+            print(await request.receive())
         except tinyws.ConnectionClosed:
             break
-
-@application.on_startup
-async def on_startup():
-    print('hello')
-
-@application.on_shutdown
-async def on_shutdown():
-    print('bye')
 ```
 
-you can run it then using any `ASGI server` like `uvicorn` just like 
+# Client usage.
+```py
+import tinyws
+import asyncio
+
+async def main():
+    # To create a connect you can use
+    # tinyws.Client(...) pr tinyws.connect(...)
+    # they are both the same thing.
+    ws = await tinyws.connect("ws://localhost:8000/")
+
+    # To send a packet to the server.
+    await ws.send("Hi!")
+
+    # The event loop to stay the connection alive.
+    while True:
+        # To get the message from the queue.
+        message = await ws.receive()
+
+        # PacketType to see what's type of message in
+        # the queue.
+        if message.type is tinyws.PacketType.TEXT:
+            print(message)
+        elif message.type is tinyws.PacketType.BINARY:
+            print(message)
+        elif message.type is tinyws.PacketType.CLOSE:
+            break
+
+asyncio.run(main())
+
+```
+
+you can run it then using any `ASGI server` like `uvicorn` just like
 ```s
 $ python -m uvicorn app:application
 ```
