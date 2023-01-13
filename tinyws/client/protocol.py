@@ -60,6 +60,8 @@ class WSProtoImpl(asyncio.Protocol):
         self.extra_headers = extra_headers
         self.max_packet_size = max_packet_size
 
+        self.connection.client
+
         # Timeout.
         self.open_timeout = open_timeout
         self.is_timeout = False
@@ -73,10 +75,6 @@ class WSProtoImpl(asyncio.Protocol):
 
         # Accept.
         self.headers = None
-
-        # Close.
-        self.close_status_code = None
-        self.close_reason = None
 
         # Handshake.
         self.handshake_complete = False
@@ -119,12 +117,13 @@ class WSProtoImpl(asyncio.Protocol):
 
         def __rejrect__(event: wsproto.events.RejectConnection):
             # Called when the connection is rejected.
+
+            exc = ConnectionRejected(f"Connection rejected with an error. {event.status_code}")
+            self.message.put_nowait(exc)
             self.transport.close()
 
         def __close__(event: wsproto.events.CloseConnection):
             # Called when the connection is closed.
-            self.close_status_code = event.code
-            self.close_reason = event.reason
 
             packet = Packet(
                 type=PacketType.CLOSE,
@@ -209,7 +208,11 @@ class WSProtoImpl(asyncio.Protocol):
         if self.is_reading is True:
             raise RuntimeError("The protocol is reading the queue.")
 
-        return await self.message.get()
+        message = await self.message.get()
+        if isinstance(message, Exception):
+            raise message
+
+        return message
 
     async def send(self, message: typing.Union[str, bytes]) -> None:
         # The method to send messages to the server.

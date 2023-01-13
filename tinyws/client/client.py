@@ -1,6 +1,7 @@
 import typing
 import functools
 import asyncio
+import ssl
 import urllib.parse
 
 from tinyws.client.protocol import WSProtoImpl
@@ -55,9 +56,15 @@ class Client:
 
         if parse_url.path is False:
             parse_url.path = "/"
+        if parse_url.port is None:
+            port = 443 if parse_url.scheme == "wss" else 80
+        else:
+            port = parse_url.port
+
+        print(parse_url.hostname, (parse_url.path + parse_url.query))
 
         protocol_class = functools.partial(
-            WSProtoImpl, parse_url.hostname, parse_url.path,
+            WSProtoImpl, parse_url.hostname, (parse_url.path + parse_url.query),
             self.compression, self.origin, self.extensions, self.extra_headers,
             self.subprotocols, self.open_timeout, self.ping_timeout,
             self.max_packet_size
@@ -65,7 +72,8 @@ class Client:
 
         loop = asyncio.get_running_loop()
         transport, proto = await loop.create_connection(
-            protocol_class, parse_url.hostname, parse_url.port
+            protocol_class, parse_url.hostname, port=port,
+            ssl=ssl.create_default_context()
         )
 
         return proto
