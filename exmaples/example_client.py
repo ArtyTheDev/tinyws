@@ -1,11 +1,12 @@
 import tinyws
+import tinyws.client
 import asyncio
 
 async def main():
     # To create a connect you can use
-    # tinyws.Client(...) pr tinyws.connect(...)
+    # tinyws.client.Connect(...)
     # they are both the same thing.
-    ws = await tinyws.connect("ws://localhost:8000/")
+    ws = await tinyws.client.Connect("ws://localhost:8000/")
 
     # To send a packet to the server.
     await ws.send("Hi!")
@@ -17,11 +18,11 @@ async def main():
 
         # PacketType to see what's type of message in
         # the queue.
-        if message.type is tinyws.PacketType.TEXT:
+        if message.packet_type is tinyws.client.PacketType.TEXT:
             print(message)
-        elif message.type is tinyws.PacketType.BINARY:
+        elif message.packet_type is tinyws.client.PacketType.BYTES:
             print(message)
-        elif message.type is tinyws.PacketType.CLOSE:
+        elif message.packet_type is tinyws.client.PacketType.CLOSE:
             break
 
 asyncio.run(main())

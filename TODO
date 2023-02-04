@@ -1,7 +1,0 @@
-Add a shutdown function to the protocol
-Create a task for ping pong function
-Add unix support to the client
-Add wait_for_close function to the protocol
-Logging to the client
-Better ping pong handler
-Enhance the code style

@@ -1,50 +1,73 @@
-import typing
-import functools
-import asyncio
 import ssl
+import typing
+import asyncio
+import functools
 import urllib.parse
+import wsproto.extensions
 
-from tinyws.client.protocol import WSProtoImpl
-from wsproto.extensions import Extension
+from tinyws.client.protocol import ImplProtocol
 
-class Client:
-    """The client side."""
+
+class Connect(object):
+    """A connect object to make the server."""
 
     def __init__(
         self,
         uri: str,
-        compression: str = "deflate",
-        origin: typing.Optional[str] = None,
-        extensions: typing.Optional[typing.List[Extension]] = [],
-        extra_headers: typing.Optional[typing.List[typing.Tuple[bytes,bytes]]] = [],
-        subprotocols: typing.Optional[str] = None,
-        open_timeout: int = 15,
-        ping_timeout: int = 20,
-        max_packet_size: int = 1024 * 8 * 2
-    ) -> None:
-
-        # Connect.
+        subprotocol: typing.List[str] = [],
+        extensions: typing.List[
+            wsproto.extensions.Extension
+        ] = [],
+        extra_headers: typing.List[
+            typing.Tuple[bytes, bytes]
+        ] = [(b"Server-Provider", b"TinyWS")],
+        logger: str = "tinyws.client.protocol",
+        ssl_context: typing.Optional[
+            ssl.SSLContext
+        ] = None,
+        connect_timeout: float = 25.0
+    ):
+        # Init.
         self.uri = uri
-
-        # Packet attrs.
-        self.compression = compression
-        self.origin = origin
+        self.subprotocols = subprotocol
         self.extensions = extensions
-        self.subprotocols = subprotocols
         self.extra_headers = extra_headers
-        self.open_timeout = open_timeout
-        self.max_packet_size = max_packet_size
+        self.ssl_context = ssl_context
+        self.connect_timeout = connect_timeout
+        self.logger = logger
 
-        # Ping attrs.
-        self.ping_timeout = ping_timeout
+    def uri_parse(self):
+        # To make the info for the
+        # protocol.
 
-    def __await__(self) -> typing.Generator[typing.Any, None, WSProtoImpl]:
+        parse_url = urllib.parse.urlsplit(self.uri)
+        hostname, port, = parse_url.hostname, \
+            parse_url.port
+
+        if port is None:
+            if parse_url.scheme == "ws":
+                port = 80
+            elif parse_url.scheme == "wss":
+                port = 443
+
+        is_ssl = False
+        if port == 443:
+            if self.ssl_context is not None:
+                is_ssl = True
+            else:
+                self.ssl_context = ssl.create_default_context()
+
+        target = parse_url.path + parse_url.query
+
+        return hostname, port, target, is_ssl
+
+    def __await__(self) -> typing.Generator[typing.Any, None, ImplProtocol]:
         # Main function.
 
         async def __main__():
             return await asyncio.wait_for(
                 self.__await_timeout__(),
-                self.open_timeout
+                self.connect_timeout
             )
 
         return __main__().__await__()
@@ -52,30 +75,25 @@ class Client:
     async def __await_timeout__(self):
         # Timeout the connection.
 
-        parse_url = urllib.parse.urlsplit(self.uri)
+        hostname, port, target, is_ssl = self.uri_parse()
 
-        if parse_url.path is False:
-            parse_url.path = "/"
-        if parse_url.port is None:
-            port = 443 if parse_url.scheme == "wss" else 80
-        else:
-            port = parse_url.port
-
-        print(parse_url.hostname, (parse_url.path + parse_url.query))
-
-        protocol_class = functools.partial(
-            WSProtoImpl, parse_url.hostname, (parse_url.path + parse_url.query),
-            self.compression, self.origin, self.extensions, self.extra_headers,
-            self.subprotocols, self.open_timeout, self.ping_timeout,
-            self.max_packet_size
+        protocol_impl = functools.partial(
+            ImplProtocol, host=hostname,
+            target=target, subprotocol=self.subprotocols,
+            extensions=self.extensions, extra_headers=self.extra_headers,
+            logger=self.logger
         )
 
         loop = asyncio.get_running_loop()
-        transport, proto = await loop.create_connection(
-            protocol_class, parse_url.hostname, port=port,
-            ssl=ssl.create_default_context()
-        )
+        if is_ssl is True:
+            _, protocol = await loop.create_connection(
+                protocol_impl, host=hostname,     # type: ignore
+                port=port, ssl=self.ssl_context,  # type: ignore
+            )
+        else:
+            _, protocol = await loop.create_connection(
+                protocol_impl, host=hostname,     # type: ignore
+                port=port,  # type: ignore
+            )
 
-        return proto
-
-connect = Client
+        return protocol # noqa

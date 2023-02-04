@@ -1,15 +1,10 @@
-from .client import Client
-from .exceptions import ConnectionClosed, ConnectionRejected
+from .client import Connect
 from .packet import Packet, PacketType
-
-# connect
-from .client import connect
+from .protocol import ImplProtocol
 
 __all__ = (
-    "Client",
-    "ConnectionClosed",
-    "ConnectionRejected",
-    "Packet", "PacketType",
-
-    "connect"
-)
+    "Connect",
+    "Packet",
+    "PacketType",
+    "ImplProtocol"
+) # noqa
