@@ -1,45 +1,38 @@
 # Tinyws 📡
 a tiny tiny tiny lib to build websocket server using the ASGI server protocol.
-<br><br>
-## ⚠️ Warning
-This is not yet a complete project, the `1.0` is long way from release
-so please don't use it just learn from my mistakes and my experience.
-<br><br>
+
 ### Server Usage.
 An example usage of it.
 ```py
 import tinyws
+import tinyws.server
 
-@tinyws.app()
-async def application(request: tinyws.Request):
-    # You should always accept the request
-    # or close it if you rejecting the request.
+@tinyws.server.app()
+async def application(request: tinyws.server.WebSocket):
+    # Accept the connection.
     await request.accept()
 
-    # To send a packet you can use eaither the raw
-    # await request.send(...)
-    await request.send("Hello!")
-
+    # While loop for the keep-live connection.
     while True:
         try:
-            # await request.recv() raise an error
-            # ConnectionClosed when the connection is closed
-            # it also raise it when you close the connection.
-            print(await request.receive())
-        except tinyws.ConnectionClosed:
+            # read the data.
+            recv = await request.receive_text()
+            print(recv)
+        except tinyws.server.WebSocketDisconnect:
             break
 ```
 
 ### Client usage.
 ```py
 import tinyws
+import tinyws.client
 import asyncio
 
 async def main():
     # To create a connect you can use
-    # tinyws.Client(...) pr tinyws.connect(...)
+    # tinyws.client.Connect(...)
     # they are both the same thing.
-    ws = await tinyws.connect("ws://localhost:8000/")
+    ws = await tinyws.client.Connect("ws://localhost:8000/")
 
     # To send a packet to the server.
     await ws.send("Hi!")
@@ -51,11 +44,11 @@ async def main():
 
         # PacketType to see what's type of message in
         # the queue.
-        if message.type is tinyws.PacketType.TEXT:
+        if message.packet_type is tinyws.client.PacketType.TEXT:
             print(message)
-        elif message.type is tinyws.PacketType.BINARY:
+        elif message.packet_type is tinyws.client.PacketType.BYTES:
             print(message)
-        elif message.type is tinyws.PacketType.CLOSE:
+        elif message.packet_type is tinyws.client.PacketType.CLOSE:
             break
 
 asyncio.run(main())
