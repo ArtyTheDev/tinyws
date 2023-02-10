@@ -12,7 +12,7 @@ setup(
         "tinyws.client"
     ],
     install_requires=[
-        "starlette", "asgiref", "https://github.com/ArtyTheDev/tinyasgi.git"
+        "starlette", "asgiref", "tinyasgi @ git+https://git@github.com/ArtyTheDev/tinyasgi.git"
     ],
     python_requires=">=3.6",
     platforms="any",
