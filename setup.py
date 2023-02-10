@@ -8,8 +8,11 @@ setup(
     author_email='artythedev@gmail.com',
     url='https://github.com/ArtyTheDev/tinyws',
     packages=[
+        "tinyws",
         "tinyws.client"
-        "tinyws"
+    ],
+    install_requires=[
+        "starlette", "asgiref", "https://github.com/ArtyTheDev/tinyasgi.git"
     ],
     python_requires=">=3.6",
     platforms="any",
