@@ -7,7 +7,7 @@ WebSocket = tinyasgi.websockets.WebSocket
 WebSocketClose = tinyasgi.websockets.WebSocketClose
 WebSocketDisconnect = tinyasgi.websockets.WebSocketDisconnect
 app = functools.partial(
-    tinyasgi.application.app, support=("ws")
+    tinyasgi.application.app, support=("websocket")
 )
 
 __all__ = (
